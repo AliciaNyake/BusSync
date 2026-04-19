@@ -28,8 +28,8 @@ nav {
     
  }
  a{
-    background-color: #085041;
-    color: #FFFFFF;
+    
+    color: #085041;
    
     text-decoration: inherit;
  }
@@ -43,6 +43,7 @@ nav {
   top: 25px;
 }
 main{
+      background-color: #F7F6F2;
     border: 5px solid #085041;
     border-radius: 14px;
      
@@ -58,7 +59,7 @@ padding-right: 50px;
    
 }
  h4{
-    background-color: #FFFFFF;
+   
       border: 3px solid  rgba(0,0,0,0.10);
       border-radius: 14px;
       color: #6B6B6B;
@@ -66,7 +67,7 @@ padding-right: 50px;
         margin-right: 40px;
 }
  h5{   
-    background-color: #FFFFFF;
+   
        color: #6B6B6B;
         margin-left: 100px;
         margin-right: 100px;
@@ -77,3 +78,8 @@ padding-right: 50px;
     margin: 0;
     padding: 0;
  }
+ li{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}

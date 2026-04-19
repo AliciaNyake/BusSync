@@ -1,4 +1,4 @@
-h3{
+/* h3{
     color:rgb(0, 12, 69);
 }
 main {
@@ -28,7 +28,7 @@ nav {
   display: flex;
   gap: 50px;
   text-align: center; /* ajustez la valeur selon vos besoins */
-  position: relative;
+  /* position: relative;
   top: 25px;
 }
 main{
@@ -42,4 +42,4 @@ padding-right: 50px;
    padding-bottom: 20px;
    margin-left: 500px;
    
-}
+} */ */
