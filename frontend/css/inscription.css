@@ -1,0 +1,45 @@
+/* h3{
+    color:rgb(0, 12, 69);
+}
+main {
+    color: rgb(0, 12, 69);
+    background-color: ;
+}  
+
+nav {
+    padding-left: 250px;
+    display: block;
+    display: flex;
+
+}
+ #entete{
+    display: flex;
+    border: 3px solid  rgb(0, 12, 69);
+    border
+
+ }
+ #liens {
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+    
+ }
+ #liens {
+  display: flex;
+  gap: 50px;
+  text-align: center; /* ajustez la valeur selon vos besoins */
+  /* position: relative;
+  top: 25px;
+}
+main{
+    display: flex;
+    border: 4px solid rgb(0, 12, 69);
+    flex-direction: column;
+   text-align: center;
+   width: 500px;
+padding-left: 50px;
+padding-right: 50px;
+   padding-bottom: 20px;
+   margin-left: 500px;
+   
+} */ */
