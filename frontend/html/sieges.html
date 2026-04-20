@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusSync — Sièges</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/sieges.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="logo" href="../index.html">BusSync</a>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
+
+  <div class="stepper" id="stepper"></div>
+
+  <div class="main-wide">
+    <div class="section-head">
+      <h1>Choix des sièges</h1>
+      <p id="sieges-subtitle">Sélectionnez vos places</p>
+    </div>
+
+    <div class="seat-layout">
+      <div class="legend-card">
+        <p class="legend-title">Légende</p>
+        <div class="legend-item"><div class="legend-box available"></div><span class="legend-text">Disponible</span></div>
+        <div class="legend-item"><div class="legend-box taken"></div><span class="legend-text">Réservé</span></div>
+        <div class="legend-item"><div class="legend-box selected"></div><span class="legend-text">Votre sélection</span></div>
+        <div class="legend-item"><div class="legend-box driver"></div><span class="legend-text">Conducteur</span></div>
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <p style="font-size:0.78rem;color:var(--muted);line-height:1.6;font-weight:300;">Modifiez votre choix à tout moment avant la confirmation.</p>
+        </div>
+      </div>
+
+      <div class="bus-card">
+        <div class="bus-front">↑ Avant du bus</div>
+        <div class="seat-grid" id="seat-grid"></div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="selection-info">
+        <span>Places sélectionnées</span>
+        <strong id="selected-label">Aucune place sélectionnée</strong>
+      </div>
+      <button class="btn-continue" id="btn-validate" disabled onclick="handleValidate()">Valider →</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script>
+    var session = JSON.parse(sessionStorage.getItem('session') || 'null');
+    var booking = JSON.parse(sessionStorage.getItem('booking') || 'null');
+    if (!session) { window.location.href = 'connexion.html'; }
+    if (!booking)  { window.location.href = '../index.html'; }
+
+    // Nav
+    var navEl = document.getElementById('nav-links');
+    navEl.innerHTML =
+      '<li><a href="../index.html">Accueil</a></li>' +
+      '<li><div class="user-badge"><div class="user-avatar">' + session.initials + '</div>' +
+      '<span class="user-name">' + session.name + '</span></div></li>' +
+      '<li><button class="btn-logout" onclick="logout()">Déconnexion</button></li>';
+
+    function logout() { sessionStorage.clear(); window.location.href = '../index.html'; }
+
+    buildStepper('stepper', booking, 3);
+
+    document.getElementById('sieges-subtitle').textContent =
+      'Sélectionnez vos places pour ' + booking.depart + ' → ' + booking.arrivee;
+
+    var ROWS = 10, COLS = 4;
+    var selectedSeats = new Set();
+    var pax = booking.passagers || { adult: 1, child: 0, baby: 0 };
+    var maxSelect = pax.adult + pax.child;
+
+    async function init() {
+      var bookedSet = new Set();
+      try {
+        var from = encodeURIComponent(booking.depart);
+        var to   = encodeURIComponent(booking.arrivee);
+        var tripsData = await apiGet('/api/trips?from=' + from + '&to=' + to, session.token);
+        if (tripsData.status === 'OK' && tripsData.trips && tripsData.trips.length > 0) {
+          booking.tripId = tripsData.trips[0].id;
+          sessionStorage.setItem('booking', JSON.stringify(booking));
+          var seatsData = await apiGet('/api/trips/' + booking.tripId + '/seats', session.token);
+          if (seatsData.status === 'OK' && seatsData.seats) {
+            for (var i = 0; i < seatsData.seats.length; i++) {
+              if (seatsData.seats[i] === '1') bookedSet.add(i + 1);
+            }
+          }
+        }
+      } catch(e) {
+        [3, 7, 12, 19, 23, 31].forEach(function(n) { bookedSet.add(n); });
+      }
+      buildSeatGrid(bookedSet);
+      updateSeatLabel();
+    }
+
+    function buildSeatGrid(bookedSet) {
+      var grid = document.getElementById('seat-grid');
+      grid.innerHTML = '';
+      var labels = 'ABCD';
+      for (var r = 0; r < ROWS; r++) {
+        var row = document.createElement('div');
+        row.className = 'seat-row';
+        for (var c = 0; c < COLS; c++) {
+          if (c === 2) {
+            var aisle = document.createElement('div');
+            aisle.className = 'aisle';
+            row.appendChild(aisle);
+          }
+          var gridId = r + '-' + c;
+          var seatNo = r * 4 + c + 1;
+          var seat = document.createElement('div');
+          seat.className = 'seat';
+          seat.textContent = (r + 1) + labels[c];
+          seat.dataset.seatNo = seatNo;
+          if (r === 0 && c === 0) {
+            seat.classList.add('driver'); seat.textContent = '🚌';
+          } else if (bookedSet.has(seatNo)) {
+            seat.classList.add('taken');
+          } else {
+            (function(gid, el) {
+              el.addEventListener('click', function() { toggleSeat(gid, el); });
+            })(gridId, seat);
+          }
+          row.appendChild(seat);
+        }
+        grid.appendChild(row);
+      }
+    }
+
+    function toggleSeat(gridId, el) {
+      if (selectedSeats.has(gridId)) {
+        selectedSeats.delete(gridId); el.classList.remove('selected');
+      } else {
+        if (selectedSeats.size >= maxSelect) return;
+        selectedSeats.add(gridId); el.classList.add('selected');
+      }
+      updateSeatLabel();
+    }
+
+    function updateSeatLabel() {
+      var label = document.getElementById('selected-label');
+      var btn   = document.getElementById('btn-validate');
+      if (selectedSeats.size === 0) {
+        label.textContent = 'Aucune place sélectionnée';
+        btn.disabled = true;
+      } else {
+        var names = Array.from(selectedSeats).map(function(gid) {
+          var parts = gid.split('-').map(Number);
+          return (parts[0] + 1) + 'ABCD'[parts[1]];
+        });
+        label.textContent = names.join(', ') + ' — ' + selectedSeats.size + '/' + maxSelect + ' places';
+        btn.disabled = selectedSeats.size < maxSelect;
+      }
+    }
+
+    async function handleValidate() {
+      var btn = document.getElementById('btn-validate');
+      btn.disabled = true;
+      btn.textContent = 'Réservation...';
+      booking.seats = Array.from(selectedSeats).map(function(gid) {
+        var parts = gid.split('-').map(Number);
+        return (parts[0] + 1) + 'ABCD'[parts[1]];
+      });
+      sessionStorage.setItem('booking', JSON.stringify(booking));
+      window.location.href = 'confirmation.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+.login-wrapper {
+  flex: 1; display: flex; align-items: center;
+  justify-content: center; padding: 2rem;
+  position: relative; background: var(--teal);
+}
+
+.login-wrapper::before {
+  content: ''; position: absolute;
+  width: 400px; height: 400px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  top: 10%; left: -100px;
+}
+
+.login-wrapper::after {
+  content: ''; position: absolute;
+  width: 250px; height: 250px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.06);
+  bottom: 5%; right: -50px;
+}
+
+.login-card {
+  background: white; border-radius: 20px;
+  padding: 2.5rem 2.5rem 2rem;
+  width: 100%; max-width: 420px;
+  position: relative; z-index: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.login-header { text-align: center; margin-bottom: 2rem; }
+
+.login-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  letter-spacing: -0.5px; margin-bottom: 0.3rem;
+}
+
+.login-header p { font-size: 0.85rem; color: var(--muted); font-weight: 300; }
+
+.booking-notice {
+  background: var(--teal-light);
+  border: 1px solid rgba(15,140,106,0.25);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+
+.booking-notice p { font-size: 0.8rem; color: var(--teal-dark); line-height: 1.5; }
+
+.login-input-group { position: relative; margin-bottom: 1.1rem; }
+
+.login-input-group label {
+  display: block;
+  font-size: 0.72rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 0.4rem;
+}
+
+.login-input-group input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; color: var(--text);
+  background: var(--bg); outline: none;
+  transition: border-color 0.2s;
+}
+
+.login-input-group input:focus { border-color: var(--teal); background: white; }
+.login-input-group input::placeholder { color: #B0B0A8; font-weight: 300; }
+
+.login-input-group .input-icon {
+  position: absolute; left: 0.85rem; bottom: 0.9rem;
+  width: 18px; height: 18px; color: var(--muted);
+}
+
+.password-toggle {
+  position: absolute; right: 0.85rem; bottom: 0.75rem;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); padding: 4px; transition: color 0.2s;
+}
+
+.password-toggle:hover { color: var(--teal); }
+
+.forgot-link {
+  display: block; text-align: right;
+  font-size: 0.78rem; color: var(--teal);
+  text-decoration: none; margin-bottom: 1.5rem;
+  font-weight: 500; cursor: pointer;
+}
+
+.divider {
+  display: flex; align-items: center;
+  margin: 1.5rem 0; gap: 0.75rem;
+}
+
+.divider::before, .divider::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+
+.divider span { font-size: 0.75rem; color: var(--muted); }
+
+.signup-prompt { text-align: center; font-size: 0.85rem; color: var(--muted); font-weight: 300; }
+.signup-prompt a { color: var(--teal); text-decoration: none; font-weight: 600; cursor: pointer; }

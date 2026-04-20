@@ -5,9 +5,649 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BusSync</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/style.css" />
+<style>
+:root {
+  --teal: #0F8C6A;
+  --teal-light: #E1F5EE;
+  --teal-dark: #085041;
+  --red: #C0392B;
+  --red-hover: #A93226;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --text: #1A1A1A;
+  --muted: #6B6B6B;
+  --border: rgba(0,0,0,0.10);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* PAGES */
+.page { display: none; min-height: 100vh; flex-direction: column; }
+.page.active { display: flex; flex-direction: column; }
+
+/* NAV */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 2.5rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+nav.dark {
+  background: var(--teal);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: var(--teal);
+  letter-spacing: -0.5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+nav.dark .logo { color: white; }
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  align-items: center;
+}
+
+.nav-links a, .nav-links button {
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--muted);
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nav-links a:hover, .nav-links button:hover { color: var(--teal); }
+
+nav.dark .nav-links a,
+nav.dark .nav-links button { color: rgba(255,255,255,0.65); }
+nav.dark .nav-links a:hover,
+nav.dark .nav-links button:hover { color: white; }
+
+.btn-nav {
+  background: var(--teal) !important;
+  color: var(--white) !important;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  font-weight: 500 !important;
+  font-size: 0.875rem;
+  transition: background 0.2s;
+}
+
+.btn-nav:hover { background: var(--teal-dark) !important; }
+
+nav.dark .btn-nav {
+  background: rgba(255,255,255,0.15) !important;
+  color: white !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+}
+
+nav.dark .btn-nav:hover { background: rgba(255,255,255,0.25) !important; }
+
+.btn-logout {
+  background: transparent !important;
+  color: var(--red) !important;
+  border: 1.5px solid var(--red) !important;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+}
+
+.btn-logout:hover { background: var(--red) !important; color: white !important; }
+
+.user-badge { display: flex; align-items: center; gap: 0.5rem; }
+
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.75rem;
+}
+
+.user-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+
+/* STEPPER */
+.stepper {
+  background: var(--teal);
+  padding: 1.3rem 2.5rem;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.step-pill {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  border-radius: 99px;
+  padding: 0.4rem 1rem;
+  flex-shrink: 0;
+}
+
+.step-pill.done { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.45); }
+.step-pill.active { background: white; border-color: white; }
+
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  font-size: 0.7rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.2);
+  color: white; flex-shrink: 0;
+}
+
+.step-pill.done .step-num { background: rgba(255,255,255,0.9); color: var(--teal-dark); }
+.step-pill.active .step-num { background: var(--teal); color: white; }
+
+.step-label { font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.65); }
+.step-pill.done .step-label { color: rgba(255,255,255,0.9); }
+.step-pill.active .step-label { color: var(--teal-dark); font-weight: 600; }
+
+.step-val { font-size: 0.73rem; color: rgba(255,255,255,0.75); margin-left: 0.1rem; }
+
+.arrow {
+  flex: 1; height: 1px; background: rgba(255,255,255,0.22);
+  margin: 0 1rem; position: relative; min-width: 40px;
+}
+
+.arrow::after {
+  content: '';
+  position: absolute; right: -1px; top: -3px;
+  border: 4px solid transparent;
+  border-left: 6px solid rgba(255,255,255,0.35);
+}
+
+.btn-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white; cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0; margin-right: 1rem;
+}
+
+.btn-back:hover { background: rgba(255,255,255,0.2); }
+
+/* ========== PAGE HOME ========== */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+}
+
+.hero-left {
+  background: var(--teal);
+  padding: 4rem 3rem 4rem 3.5rem;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+
+.hero-left::before {
+  content: '';
+  position: absolute;
+  width: 320px; height: 320px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  bottom: -80px; left: -80px;
+}
+
+.hero-left::after {
+  content: '';
+  position: absolute;
+  width: 180px; height: 180px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  top: 40px; right: -50px;
+}
+
+.tagline {
+  display: inline-block;
+  font-size: 0.75rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 1.2rem;
+  background: rgba(255,255,255,0.1);
+  padding: 0.3rem 0.75rem; border-radius: 99px;
+  width: fit-content;
+}
+
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.2rem, 3.5vw, 3.2rem);
+  font-weight: 800; color: white;
+  line-height: 1.1; letter-spacing: -1px; margin-bottom: 1.25rem;
+}
+
+.hero-title span { display: block; color: rgba(255,255,255,0.55); font-weight: 700; }
+
+.hero-desc {
+  font-size: 0.95rem; color: rgba(255,255,255,0.7);
+  line-height: 1.75; max-width: 340px; font-weight: 300;
+}
+
+.stats-row {
+  display: flex; gap: 2rem;
+  margin-top: 2.5rem; padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.stat-number { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: white; line-height: 1; }
+.stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem; font-weight: 300; }
+
+.hero-right {
+  padding: 3.5rem 3rem;
+  display: flex; flex-direction: column; justify-content: center;
+  background: var(--bg);
+}
+
+.form-header { margin-bottom: 2rem; }
+
+.form-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem; font-weight: 700;
+  letter-spacing: -0.5px; margin-bottom: 0.3rem;
+}
+
+.form-header p { font-size: 0.875rem; color: var(--muted); font-weight: 300; }
+
+.search-card {
+  background: white; border-radius: 16px;
+  padding: 2rem; border: 1px solid var(--border);
+}
+
+.input-group { position: relative; margin-bottom: 1rem; }
+
+.input-group label {
+  display: block;
+  font-size: 0.72rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 0.4rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; color: var(--text);
+  background: var(--bg); outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.input-group input:focus { border-color: var(--teal); background: white; }
+.input-group input.error { border-color: var(--red); background: #FFF5F5; }
+.input-group input::placeholder { color: #B0B0A8; font-weight: 300; }
+
+.input-icon {
+  position: absolute; left: 0.85rem; bottom: 0.82rem;
+  width: 18px; height: 18px; color: var(--muted);
+}
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+
+.swap-btn {
+  position: absolute; right: 0.85rem; bottom: 0.75rem;
+  background: var(--teal-light); border: none; border-radius: 6px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+}
+
+.swap-btn:hover { background: #9FE1CB; }
+
+.form-error {
+  color: var(--red); font-size: 0.8rem; text-align: center;
+  margin-bottom: 0.5rem; display: none;
+  padding: 0.5rem; background: #FFF5F5;
+  border-radius: 8px; border: 1px solid rgba(192,57,43,0.2);
+}
+
+/* ========== PAGE CONNEXION ========== */
+.login-wrapper {
+  flex: 1; display: flex; align-items: center;
+  justify-content: center; padding: 2rem;
+  position: relative; background: var(--teal);
+}
+
+.login-wrapper::before {
+  content: ''; position: absolute;
+  width: 400px; height: 400px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  top: 10%; left: -100px;
+}
+
+.login-wrapper::after {
+  content: ''; position: absolute;
+  width: 250px; height: 250px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.06);
+  bottom: 5%; right: -50px;
+}
+
+.login-card {
+  background: white; border-radius: 20px;
+  padding: 2.5rem 2.5rem 2rem;
+  width: 100%; max-width: 420px;
+  position: relative; z-index: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.login-header { text-align: center; margin-bottom: 2rem; }
+
+.login-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  letter-spacing: -0.5px; margin-bottom: 0.3rem;
+}
+
+.login-header p { font-size: 0.85rem; color: var(--muted); font-weight: 300; }
+
+.booking-notice {
+  background: var(--teal-light);
+  border: 1px solid rgba(15,140,106,0.25);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+
+.booking-notice p { font-size: 0.8rem; color: var(--teal-dark); line-height: 1.5; }
+
+.login-input-group { position: relative; margin-bottom: 1.1rem; }
+
+.login-input-group label {
+  display: block;
+  font-size: 0.72rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 0.4rem;
+}
+
+.login-input-group input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; color: var(--text);
+  background: var(--bg); outline: none;
+  transition: border-color 0.2s;
+}
+
+.login-input-group input:focus { border-color: var(--teal); background: white; }
+.login-input-group input::placeholder { color: #B0B0A8; font-weight: 300; }
+
+.login-input-group .input-icon {
+  position: absolute; left: 0.85rem; bottom: 0.9rem;
+  width: 18px; height: 18px; color: var(--muted);
+}
+
+.password-toggle {
+  position: absolute; right: 0.85rem; bottom: 0.75rem;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); padding: 4px; transition: color 0.2s;
+}
+
+.password-toggle:hover { color: var(--teal); }
+
+.forgot-link {
+  display: block; text-align: right;
+  font-size: 0.78rem; color: var(--teal);
+  text-decoration: none; margin-bottom: 1.5rem;
+  font-weight: 500; cursor: pointer;
+}
+
+.divider {
+  display: flex; align-items: center;
+  margin: 1.5rem 0; gap: 0.75rem;
+}
+
+.divider::before, .divider::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+
+.divider span { font-size: 0.75rem; color: var(--muted); }
+
+.signup-prompt { text-align: center; font-size: 0.85rem; color: var(--muted); font-weight: 300; }
+.signup-prompt a { color: var(--teal); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+/* ========== PAGE PASSAGERS ========== */
+.main {
+  max-width: 580px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 4rem;
+  width: 100%;
+}
+
+.section-head { margin-bottom: 1.75rem; }
+
+.section-head h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem; font-weight: 800;
+  letter-spacing: -0.5px; margin-bottom: 0.25rem;
+}
+
+.section-head p { font-size: 0.875rem; color: var(--muted); font-weight: 300; }
+
+.card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.25rem 1.5rem;
+  margin-bottom: 0.85rem;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover { border-color: rgba(15,140,106,0.3); box-shadow: 0 2px 12px rgba(15,140,106,0.07); }
+
+.pax-type { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+.pax-desc { font-size: 0.78rem; color: var(--muted); font-weight: 300; margin-top: 0.15rem; }
+
+.counter { display: flex; align-items: center; gap: 1rem; }
+
+.cnt-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 2px solid var(--teal); background: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 1.4rem; font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  transition: background 0.15s, transform 0.1s;
+  user-select: none;
+}
+
+.cnt-btn:hover { background: var(--teal); color: white; }
+.cnt-btn:active { transform: scale(0.9); }
+.cnt-btn:disabled { border-color: #D0CFC8; color: #D0CFC8; cursor: not-allowed; background: white; }
+.cnt-btn:disabled:hover { background: white; color: #D0CFC8; }
+
+.cnt-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem; font-weight: 800;
+  min-width: 30px; text-align: center;
+}
+
+.notice {
+  display: flex; gap: 0.6rem;
+  margin-top: 0.25rem; padding: 0.85rem 1rem;
+  background: var(--teal-light); border-radius: 10px;
+  border-left: 3px solid var(--teal);
+}
+
+.notice p { font-size: 0.8rem; color: var(--teal-dark); line-height: 1.6; }
+
+.summary {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.2rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.summary-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.15rem; }
+.summary-count { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+
+/* ========== PAGE SIEGES ========== */
+.main-wide {
+  max-width: 720px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 4rem;
+  width: 100%;
+}
+
+.seat-layout { display: grid; grid-template-columns: 1fr 1.8fr; gap: 1.5rem; align-items: start; }
+
+.legend-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.25rem 1.5rem;
+}
+
+.legend-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; }
+
+.legend-item { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem; }
+.legend-item:last-child { margin-bottom: 0; }
+
+.legend-box { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
+.legend-box.available { background: var(--bg); border: 1.5px solid var(--border); }
+.legend-box.taken { background: var(--red); border: 1.5px solid var(--red); }
+.legend-box.selected { background: var(--teal); border: 1.5px solid var(--teal); }
+.legend-box.driver { background: var(--text); border: 1.5px solid var(--text); }
+.legend-text { font-size: 0.8rem; color: var(--muted); }
+
+.bus-card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+
+.bus-front {
+  text-align: center; font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+  margin-bottom: 1rem; padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.seat-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+.seat-row { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.seat-row .aisle { width: 30px; }
+
+.seat {
+  width: 42px; height: 42px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 500; color: var(--muted);
+}
+
+.seat:hover:not(.taken):not(.driver) { border-color: var(--teal); background: var(--teal-light); }
+.seat.taken { background: var(--red); border-color: var(--red); cursor: not-allowed; color: rgba(255,255,255,0.6); }
+.seat.selected { background: var(--teal); border-color: var(--teal); color: white; font-weight: 700; transform: scale(1.05); box-shadow: 0 2px 8px rgba(15,140,106,0.3); }
+.seat.driver { background: var(--text); border-color: var(--text); cursor: default; color: rgba(255,255,255,0.5); font-size: 0.6rem; }
+
+.bottom-bar {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.2rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.selection-info { font-size: 0.8rem; color: var(--muted); }
+.selection-info strong { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); display: block; margin-top: 0.15rem; }
+
+/* BOUTONS COMMUNS */
+.btn-primary {
+  padding: 0.9rem;
+  background: var(--red); color: white;
+  border: none; border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { background: var(--red-hover); }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary.full { width: 100%; margin-top: 0.5rem; }
+
+.btn-continue {
+  padding: 0.8rem 1.75rem;
+  background: var(--red); color: white;
+  border: none; border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-continue:hover { background: var(--red-hover); }
+.btn-continue:active { transform: scale(0.98); }
+.btn-continue:disabled { background: #D0CFC8; cursor: not-allowed; }
+
+/* CONFIRMATION */
+.confirm-wrapper {
+  flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem;
+}
+
+.confirm-card {
+  background: white; border-radius: 20px;
+  padding: 3rem; text-align: center;
+  max-width: 440px; width: 100%;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+}
+
+.confirm-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--teal-light); margin: 0 auto 1.5rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.confirm-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  margin-bottom: 0.5rem; letter-spacing: -0.5px;
+}
+
+.confirm-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; }
+
+.confirm-detail {
+  background: var(--bg); border-radius: 12px;
+  padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.confirm-detail-row {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem; padding: 0.3rem 0;
+}
+
+.confirm-detail-row span:first-child { color: var(--muted); }
+.confirm-detail-row span:last-child { font-weight: 500; }
+</style>
 </head>
 <body>
+
 <!-- ========== PAGE: HOME ========== -->
 <div class="page active" id="page-home">
   <nav id="nav-home">
@@ -243,6 +883,417 @@
   </div>
 </div>
 
-<script src="js/app.js"></script>
+<script>
+const API = 'http://localhost:8080';
+
+const App = { session: null, booking: null };
+
+// ===== API HELPERS =====
+async function apiPost(endpoint, body, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+  return res.json();
+}
+async function apiGet(endpoint, token) {
+  const headers = {};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + endpoint, { headers });
+  return res.json();
+}
+
+// ===== ROUTER =====
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + page).classList.add('active');
+  window.scrollTo(0, 0);
+  var inits = { home: initHome, connexion: initConnexion, passagers: initPassagers, sieges: initSieges, confirmation: initConfirmation };
+  if (inits[page]) inits[page]();
+}
+
+// Gestion des boutons data-goto (évite les problèmes de quotes dans innerHTML)
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-goto]');
+  if (btn) goTo(btn.dataset.goto);
+});
+
+// ===== SESSION =====
+function isLoggedIn() { return App.session !== null; }
+
+function logout() { App.session = null; App.booking = null; goTo('home'); }
+
+function updateNav(navLinksId, dark) {
+  var nav = document.getElementById(navLinksId);
+  if (!nav) return;
+  var nameColor = dark ? 'white' : 'var(--text)';
+  if (isLoggedIn()) {
+    nav.innerHTML =
+      '<li><button data-goto="home">Accueil</button></li>' +
+      '<li><div class="user-badge">' +
+        '<div class="user-avatar">' + App.session.initials + '</div>' +
+        '<span class="user-name" style="color:' + nameColor + '">' + App.session.name + '</span>' +
+      '</div></li>' +
+      '<li><button class="btn-logout" id="btn-logout-nav">Déconnexion</button></li>';
+    var logoutBtn = document.getElementById('btn-logout-nav');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+  } else {
+    nav.innerHTML =
+      '<li><button data-goto="home">Accueil</button></li>' +
+      '<li><button class="btn-nav" data-goto="connexion">Connexion</button></li>';
+  }
+}
+
+// ===== FORMAT =====
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function gridIdToSeatNo(gridId) {
+  var parts = gridId.split('-').map(Number);
+  return parts[0] * 4 + parts[1] + 1;
+}
+function gridIdToLabel(gridId) {
+  var parts = gridId.split('-').map(Number);
+  return (parts[0] + 1) + 'ABCD'[parts[1]];
+}
+
+// ===== STEPPER =====
+function buildStepper(containerId, currentStep) {
+  var container = document.getElementById(containerId);
+  var b = App.booking || {};
+  var pax = b.passagers;
+  var totalPax = pax ? (pax.adult + pax.child + pax.baby) : null;
+  var backSVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>';
+
+  var steps = [
+    { label: 'Départ',    val: b.depart || '' },
+    { label: 'Arrivée',   val: b.arrivee || '' },
+    { label: 'Date',      val: b.date ? formatDate(b.date) + (b.heure ? ' ' + b.heure : '') : '' },
+    { label: 'Passagers', val: totalPax ? totalPax + ' pers.' : '' }
+  ];
+  if (currentStep >= 3) steps.push({ label: 'Sièges', val: '' });
+
+  var html = '';
+  if (currentStep === 2) html += '<button class="btn-back" data-goto="home" title="Retour">' + backSVG + '</button>';
+  if (currentStep === 3) html += '<button class="btn-back" data-goto="passagers" title="Retour">' + backSVG + '</button>';
+
+  for (var i = 0; i < steps.length; i++) {
+    if (i > 0) html += '<div class="arrow"></div>';
+    var isDone   = (i + 1) < currentStep;
+    var isActive = (i + 1) === currentStep;
+    var cls = 'step-pill' + (isDone ? ' done' : '') + (isActive ? ' active' : '');
+    html += '<div class="' + cls + '">';
+    html += '<div class="step-num">' + (isDone ? '✓' : (i + 1)) + '</div>';
+    html += '<span class="step-label">' + steps[i].label + '</span>';
+    if (steps[i].val) html += '<span class="step-val">' + steps[i].val + '</span>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+// ===== PAGE HOME =====
+function initHome() {
+  document.getElementById('inp-date').min = new Date().toISOString().split('T')[0];
+  updateNav('nav-home-links', false);
+}
+
+function swapCities() {
+  var d = document.getElementById('inp-depart');
+  var a = document.getElementById('inp-arrivee');
+  var tmp = d.value; d.value = a.value; a.value = tmp;
+  d.classList.remove('error'); a.classList.remove('error');
+}
+
+function handleReservation() {
+  var depart  = document.getElementById('inp-depart').value.trim();
+  var arrivee = document.getElementById('inp-arrivee').value.trim();
+  var date    = document.getElementById('inp-date').value;
+  var heure   = document.getElementById('inp-heure').value;
+  var errEl   = document.getElementById('home-error');
+
+  ['inp-depart','inp-arrivee','inp-date','inp-heure'].forEach(function(id) {
+    document.getElementById(id).classList.remove('error');
+  });
+  errEl.style.display = 'none';
+
+  var hasError = false;
+  if (!depart)  { document.getElementById('inp-depart').classList.add('error');  hasError = true; }
+  if (!arrivee) { document.getElementById('inp-arrivee').classList.add('error'); hasError = true; }
+  if (!date)    { document.getElementById('inp-date').classList.add('error');    hasError = true; }
+  if (!heure)   { document.getElementById('inp-heure').classList.add('error');   hasError = true; }
+
+  if (!hasError && depart.toLowerCase() === arrivee.toLowerCase()) {
+    errEl.textContent = "La ville de départ et d'arrivée doivent être différentes.";
+    errEl.style.display = 'block';
+    document.getElementById('inp-depart').classList.add('error');
+    document.getElementById('inp-arrivee').classList.add('error');
+    return;
+  }
+  if (hasError) {
+    errEl.textContent = 'Veuillez remplir tous les champs avant de continuer.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  App.booking = { depart: depart, arrivee: arrivee, date: date, heure: heure, tripId: null, passagers: null, seats: [] };
+  if (isLoggedIn()) goTo('passagers');
+  else              goTo('connexion');
+}
+
+// ===== PAGE CONNEXION =====
+function initConnexion() {
+  var b = App.booking;
+  var notice     = document.getElementById('login-notice');
+  var noticeText = document.getElementById('login-notice-text');
+  if (b) {
+    notice.style.display = 'flex';
+    noticeText.textContent = 'Connectez-vous pour réserver : ' + b.depart + ' → ' + b.arrivee + ' le ' + formatDate(b.date) + '.';
+  } else {
+    notice.style.display = 'none';
+  }
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-email').value    = '';
+  document.getElementById('login-password').value = '';
+}
+
+async function handleLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var pass  = document.getElementById('login-password').value;
+  var errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!email || !pass) {
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.querySelector('#page-connexion .btn-primary');
+  btn.textContent = 'Connexion...';
+  btn.disabled = true;
+
+  try {
+    var data = await apiPost('/api/login', { email: email, password: pass });
+    if (data.status === 'OK' && data.token) {
+      var name = email.split('@')[0];
+      App.session = { email: email, name: name, initials: name.substring(0,2).toUpperCase(), token: data.token };
+      goTo('passagers');
+    } else {
+      errEl.textContent = data.msg || 'Email ou mot de passe incorrect.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Serveur inaccessible — mode démo activé.';
+    errEl.style.display = 'block';
+    setTimeout(function() {
+      var name = email.split('@')[0];
+      App.session = { email: email, name: name, initials: name.substring(0,2).toUpperCase(), token: 'demo' };
+      goTo('passagers');
+    }, 1200);
+  }
+  btn.textContent = 'Valider';
+  btn.disabled = false;
+}
+
+function togglePwd() {
+  var input = document.getElementById('login-password');
+  var icon  = document.getElementById('eye-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    input.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// ===== PAGE PASSAGERS =====
+var paxState = { adult: 1, child: 0, baby: 0 };
+
+function initPassagers() {
+  if (!isLoggedIn()) { goTo('connexion'); return; }
+  if (!App.booking)  { goTo('home');      return; }
+  updateNav('nav-passagers-links', false);
+  buildStepper('stepper-passagers', 2);
+  document.getElementById('passagers-subtitle').textContent =
+    'Indiquez le nombre de passagers pour ' + App.booking.depart + ' → ' + App.booking.arrivee;
+  paxState.adult = 1; paxState.child = 0; paxState.baby = 0;
+  updatePax();
+}
+
+function change(type, delta) {
+  var next = paxState[type] + delta;
+  if (next < 0) return;
+  if (type === 'adult' && next < 1) return;
+  paxState[type] = next;
+  updatePax();
+}
+
+function updatePax() {
+  ['adult','child','baby'].forEach(function(t) {
+    document.getElementById(t + '-val').textContent = paxState[t];
+  });
+  document.getElementById('adult-minus').disabled = paxState.adult <= 1;
+  document.getElementById('child-minus').disabled = paxState.child <= 0;
+  document.getElementById('baby-minus').disabled  = paxState.baby  <= 0;
+  var total = paxState.adult + paxState.child + paxState.baby;
+  document.getElementById('total-label').textContent = total + (total > 1 ? ' passagers' : ' passager');
+}
+
+function handleContinuePax() {
+  App.booking.passagers = { adult: paxState.adult, child: paxState.child, baby: paxState.baby };
+  goTo('sieges');
+}
+
+// ===== PAGE SIEGES =====
+var ROWS = 10, COLS = 4;
+var selectedSeats = new Set();
+var maxSelect = 1;
+
+async function initSieges() {
+  if (!isLoggedIn()) { goTo('connexion'); return; }
+  if (!App.booking)  { goTo('home');      return; }
+  updateNav('nav-sieges-links', false);
+  buildStepper('stepper-sieges', 3);
+  var b = App.booking;
+  document.getElementById('sieges-subtitle').textContent =
+    'Sélectionnez vos places pour ' + b.depart + ' → ' + b.arrivee;
+  var pax = b.passagers || { adult: 1, child: 0, baby: 0 };
+  maxSelect = pax.adult + pax.child;
+  selectedSeats.clear();
+
+  var bookedSet = new Set();
+  try {
+    var from = encodeURIComponent(b.depart);
+    var to   = encodeURIComponent(b.arrivee);
+    var tripsData = await apiGet('/api/trips?from=' + from + '&to=' + to, App.session.token);
+    if (tripsData.status === 'OK' && tripsData.trips && tripsData.trips.length > 0) {
+      App.booking.tripId = tripsData.trips[0].id;
+      var seatsData = await apiGet('/api/trips/' + App.booking.tripId + '/seats', App.session.token);
+      if (seatsData.status === 'OK' && seatsData.seats) {
+        for (var i = 0; i < seatsData.seats.length; i++) {
+          if (seatsData.seats[i] === '1') bookedSet.add(i + 1);
+        }
+      }
+    }
+  } catch(e) {
+    [3, 7, 12, 19, 23, 31].forEach(function(n) { bookedSet.add(n); });
+  }
+  buildSeatGrid(bookedSet);
+  updateSeatLabel();
+}
+
+function buildSeatGrid(bookedSet) {
+  var grid   = document.getElementById('seat-grid');
+  grid.innerHTML = '';
+  var labels = 'ABCD';
+  for (var r = 0; r < ROWS; r++) {
+    var row = document.createElement('div');
+    row.className = 'seat-row';
+    for (var c = 0; c < COLS; c++) {
+      if (c === 2) {
+        var aisle = document.createElement('div');
+        aisle.className = 'aisle';
+        row.appendChild(aisle);
+      }
+      var gridId = r + '-' + c;
+      var seatNo = gridIdToSeatNo(gridId);
+      var seat   = document.createElement('div');
+      seat.className = 'seat';
+      seat.textContent = (r + 1) + labels[c];
+      seat.dataset.seatNo = seatNo;
+      if (r === 0 && c === 0) {
+        seat.classList.add('driver'); seat.textContent = '🚌';
+      } else if (bookedSet.has(seatNo)) {
+        seat.classList.add('taken');
+      } else {
+        (function(gid, el) {
+          el.addEventListener('click', function() { toggleSeat(gid, el); });
+        })(gridId, seat);
+      }
+      row.appendChild(seat);
+    }
+    grid.appendChild(row);
+  }
+}
+
+function toggleSeat(gridId, el) {
+  if (selectedSeats.has(gridId)) {
+    selectedSeats.delete(gridId); el.classList.remove('selected');
+  } else {
+    if (selectedSeats.size >= maxSelect) return;
+    selectedSeats.add(gridId); el.classList.add('selected');
+  }
+  updateSeatLabel();
+}
+
+function updateSeatLabel() {
+  var label = document.getElementById('selected-label');
+  var btn   = document.getElementById('btn-validate');
+  if (selectedSeats.size === 0) {
+    label.textContent = 'Aucune place sélectionnée';
+    btn.disabled = true;
+  } else {
+    var names = Array.from(selectedSeats).map(gridIdToLabel);
+    label.textContent = names.join(', ') + ' — ' + selectedSeats.size + '/' + maxSelect + ' places';
+    btn.disabled = selectedSeats.size < maxSelect;
+  }
+}
+
+async function handleValidate() {
+  var btn = document.getElementById('btn-validate');
+  btn.disabled = true;
+  btn.textContent = 'Réservation...';
+  App.booking.seats = Array.from(selectedSeats).map(gridIdToLabel);
+  var b = App.booking;
+  var allOk = true;
+
+  if (b.tripId) {
+    for (var gridId of selectedSeats) {
+      var seatNo = gridIdToSeatNo(gridId);
+      try {
+        var data = await apiPost('/api/book', { trip_id: b.tripId, seat_no: seatNo }, App.session.token);
+        if (data.status !== 'OK') {
+          allOk = false;
+          alert('Siège ' + gridIdToLabel(gridId) + ' : ' + (data.msg || 'erreur'));
+          var seatEl = document.querySelector('[data-seat-no="' + seatNo + '"]');
+          if (seatEl) { seatEl.classList.remove('selected'); seatEl.classList.add('taken'); }
+          selectedSeats.delete(gridId);
+        }
+      } catch(e) { console.warn('API book indisponible'); }
+    }
+  }
+
+  if (!allOk) {
+    btn.textContent = 'Valider →'; btn.disabled = false; updateSeatLabel(); return;
+  }
+  goTo('confirmation');
+}
+
+// ===== PAGE CONFIRMATION =====
+function initConfirmation() {
+  updateNav('nav-confirm-links', false);
+  var b = App.booking;
+  if (!b) { goTo('home'); return; }
+  var pax   = b.passagers || { adult: 1, child: 0, baby: 0 };
+  var total = pax.adult + pax.child + pax.baby;
+  document.getElementById('confirm-detail').innerHTML =
+    '<div class="confirm-detail-row"><span>Trajet</span><span>'    + b.depart + ' → ' + b.arrivee + '</span></div>' +
+    '<div class="confirm-detail-row"><span>Date</span><span>'      + formatDate(b.date) + ' à ' + b.heure + '</span></div>' +
+    '<div class="confirm-detail-row"><span>Passagers</span><span>' + total + ' passager' + (total > 1 ? 's' : '') + '</span></div>' +
+    '<div class="confirm-detail-row"><span>Sièges</span><span>'    + (b.seats || []).join(', ') + '</span></div>' +
+    '<div class="confirm-detail-row"><span>Compte</span><span>'    + (App.session ? App.session.email : '') + '</span></div>' +
+    (b.tripId ? '<div class="confirm-detail-row"><span>Réf. trajet</span><span>#' + b.tripId + '</span></div>' : '');
+  App.booking = null;
+}
+
+// ===== INIT =====
+initHome();
+document.getElementById('login-password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
 </body>
 </html>

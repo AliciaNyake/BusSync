@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusSync — Accueil</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/home.css" />
+</head>
+<body>
+
+  <nav id="nav-home">
+    <a class="logo" href="index.html">BusSync</a>
+    <ul class="nav-links" id="nav-home-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="html/connexion.html" class="btn-nav">Connexion</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-left">
+      <span class="tagline">Transport simplifié</span>
+      <h1 class="hero-title">Tous vos trajets,<span>synchronisés.</span></h1>
+      <p class="hero-desc">Trouvez, comparez et réservez vos trajets en bus en quelques secondes. Simple, rapide, fiable.</p>
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-number">120+</div><div class="stat-label">destinations</div></div>
+        <div class="stat-item"><div class="stat-number">8 400</div><div class="stat-label">voyageurs / mois</div></div>
+        <div class="stat-item"><div class="stat-number">98%</div><div class="stat-label">ponctualité</div></div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="form-header">
+        <h2>Rechercher un trajet</h2>
+        <p>Entrez votre itinéraire pour voir les disponibilités</p>
+      </div>
+
+      <div class="search-card">
+        <div class="input-group" style="position:relative;">
+          <label>Ville de départ</label>
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+          <input type="text" id="inp-depart" placeholder="Ex : Angers" autocomplete="off" />
+          <button class="swap-btn" onclick="swapCities()" title="Inverser">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F8C6A" stroke-width="2.5"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+          </button>
+        </div>
+
+        <div style="margin:-0.25rem 0 0.75rem 2.75rem; height:1px; background:var(--border);"></div>
+
+        <div class="input-group">
+          <label>Ville d'arrivée</label>
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <input type="text" id="inp-arrivee" placeholder="Ex : Paris" autocomplete="off" />
+        </div>
+
+        <div class="row-2">
+          <div class="input-group">
+            <label>Date</label>
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <input type="date" id="inp-date" />
+          </div>
+          <div class="input-group">
+            <label>Heure</label>
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <input type="time" id="inp-heure" />
+          </div>
+        </div>
+
+        <p id="home-error" class="form-error"></p>
+        <button class="btn-primary full" onclick="handleReservation()">Entamer la réservation →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('inp-date').min = new Date().toISOString().split('T')[0];
+
+    function swapCities() {
+      var d = document.getElementById('inp-depart');
+      var a = document.getElementById('inp-arrivee');
+      var tmp = d.value; d.value = a.value; a.value = tmp;
+      d.classList.remove('error'); a.classList.remove('error');
+    }
+
+    function handleReservation() {
+      var depart  = document.getElementById('inp-depart').value.trim();
+      var arrivee = document.getElementById('inp-arrivee').value.trim();
+      var date    = document.getElementById('inp-date').value;
+      var heure   = document.getElementById('inp-heure').value;
+      var errEl   = document.getElementById('home-error');
+
+      ['inp-depart','inp-arrivee','inp-date','inp-heure'].forEach(function(id) {
+        document.getElementById(id).classList.remove('error');
+      });
+      errEl.style.display = 'none';
+
+      var hasError = false;
+      if (!depart)  { document.getElementById('inp-depart').classList.add('error');  hasError = true; }
+      if (!arrivee) { document.getElementById('inp-arrivee').classList.add('error'); hasError = true; }
+      if (!date)    { document.getElementById('inp-date').classList.add('error');    hasError = true; }
+      if (!heure)   { document.getElementById('inp-heure').classList.add('error');   hasError = true; }
+
+      if (!hasError && depart.toLowerCase() === arrivee.toLowerCase()) {
+        errEl.textContent = "La ville de départ et d'arrivée doivent être différentes.";
+        errEl.style.display = 'block';
+        document.getElementById('inp-depart').classList.add('error');
+        document.getElementById('inp-arrivee').classList.add('error');
+        return;
+      }
+      if (hasError) {
+        errEl.textContent = 'Veuillez remplir tous les champs avant de continuer.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      sessionStorage.setItem('booking', JSON.stringify({
+        depart: depart, arrivee: arrivee, date: date, heure: heure, tripId: null, passagers: null, seats: []
+      }));
+
+      if (sessionStorage.getItem('session')) {
+        window.location.href = 'html/passagers.html';
+      } else {
+        window.location.href = 'html/connexion.html';
+      }
+    }
+  </script>
+</body>
+</html>
