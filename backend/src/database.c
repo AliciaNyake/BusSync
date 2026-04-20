@@ -34,7 +34,7 @@ int db_init(sqlite3 **db) {                                        // Initialise
 
   if (!exec_sql(*db, "PRAGMA foreign_keys = ON;")) return 0;       // Active clés étrangères
 
-  // Table users (⚠️ mot de passe en clair = OK pour démo, PAS en prod)
+  // Table users ( mot de passe en clair = OK pour démo, PAS en prod)
   if (!exec_sql(*db,
     "CREATE TABLE IF NOT EXISTS users ("
     " id INTEGER PRIMARY KEY AUTOINCREMENT,"
