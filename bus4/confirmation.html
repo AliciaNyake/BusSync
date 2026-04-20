@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusSync — Confirmation</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/confirmation.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="logo" href="../index.html">BusSync</a>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
+
+  <div class="confirm-wrapper">
+    <div class="confirm-card">
+      <div class="confirm-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0F8C6A" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Réservation confirmée !</h2>
+      <p>Votre trajet a bien été réservé. Un email de confirmation a été envoyé.</p>
+      <div class="confirm-detail" id="confirm-detail"></div>
+      <button class="btn-primary full" onclick="window.location.href='../index.html'">Retour à l'accueil</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script>
+    var session = JSON.parse(sessionStorage.getItem('session') || 'null');
+    var booking = JSON.parse(sessionStorage.getItem('booking') || 'null');
+    if (!booking) { window.location.href = '../index.html'; }
+
+    // Nav
+    var navEl = document.getElementById('nav-links');
+    if (session) {
+      navEl.innerHTML =
+        '<li><a href="../index.html">Accueil</a></li>' +
+        '<li><div class="user-badge"><div class="user-avatar">' + session.initials + '</div>' +
+        '<span class="user-name">' + session.name + '</span></div></li>' +
+        '<li><button class="btn-logout" onclick="logout()">Déconnexion</button></li>';
+    }
+
+    function logout() { sessionStorage.clear(); window.location.href = '../index.html'; }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      var d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    }
+
+    var pax   = booking.passagers || { adult: 1, child: 0, baby: 0 };
+    var total = pax.adult + pax.child + pax.baby;
+
+    document.getElementById('confirm-detail').innerHTML =
+      '<div class="confirm-detail-row"><span>Trajet</span><span>'    + booking.depart + ' → ' + booking.arrivee + '</span></div>' +
+      '<div class="confirm-detail-row"><span>Date</span><span>'      + formatDate(booking.date) + ' à ' + booking.heure + '</span></div>' +
+      '<div class="confirm-detail-row"><span>Passagers</span><span>' + total + ' passager' + (total > 1 ? 's' : '') + '</span></div>' +
+      '<div class="confirm-detail-row"><span>Sièges</span><span>'    + (booking.seats || []).join(', ') + '</span></div>' +
+      '<div class="confirm-detail-row"><span>Compte</span><span>'    + (session ? session.email : '') + '</span></div>' +
+      (booking.tripId ? '<div class="confirm-detail-row"><span>Réf. trajet</span><span>#' + booking.tripId + '</span></div>' : '');
+
+    sessionStorage.removeItem('booking');
+  </script>
+</body>
+</html>
