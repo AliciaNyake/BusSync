@@ -1,6 +1,6 @@
-#ifndef HTTP_H                                     // Anti double inclusion
+#ifndef HTTP_H
 #define HTTP_H
 
-int http_run(int port);                            // Lance le serveur HTTP sur un port
+int http_run(int port);
 
 #endif

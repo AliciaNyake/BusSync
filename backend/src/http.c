@@ -1,9 +1,9 @@
 #include "http.h"
 #include "database.h"
+#include "mail.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mail.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -21,7 +21,7 @@ typedef int sock_t;
 #define CLOSESOCK close
 #endif
 
-#define REQ_BUF 8192
+#define REQ_BUF 16384
 
 static void send_all(sock_t c, const char *data) {
     int total = 0;
@@ -35,7 +35,7 @@ static void send_all(sock_t c, const char *data) {
 }
 
 static void respond_json(sock_t c, const char *json) {
-    char response[8192];
+    char response[16384];
     int body_len = (int)strlen(json);
 
     snprintf(response, sizeof(response),
@@ -58,6 +58,16 @@ static const char *find_body(const char *buffer) {
     const char *p = strstr(buffer, "\r\n\r\n");
     if (!p) return NULL;
     return p + 4;
+}
+
+static int get_content_length(const char *buffer) {
+    const char *p = strstr(buffer, "Content-Length:");
+    if (!p) return 0;
+
+    p += strlen("Content-Length:");
+    while (*p == ' ' || *p == '\t') p++;
+
+    return atoi(p);
 }
 
 static int json_get_string(const char *body, const char *key, char *out, int out_sz) {
@@ -89,13 +99,32 @@ static int json_get_string(const char *body, const char *key, char *out, int out
     return 1;
 }
 
+static int json_get_int(const char *body, const char *key, int *value_out) {
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "\"%s\"", key);
+
+    const char *p = strstr(body, pattern);
+    if (!p) return 0;
+
+    p += strlen(pattern);
+
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+    if (*p != ':') return 0;
+    p++;
+
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+
+    *value_out = atoi(p);
+    return 1;
+}
+
 static int get_query_param(const char *buffer, const char *name, char *out, int out_sz) {
     const char *line_end = strstr(buffer, " HTTP/");
     if (!line_end) return 0;
 
     char first_line[1024];
     int len = (int)(line_end - buffer);
-    if (len >= (int)sizeof(first_line)) len = sizeof(first_line) - 1;
+    if (len >= (int)sizeof(first_line)) len = (int)sizeof(first_line) - 1;
 
     memcpy(first_line, buffer, len);
     first_line[len] = '\0';
@@ -140,28 +169,6 @@ static int get_header_value(const char *buffer, const char *header_name, char *o
     out[len] = '\0';
     return 1;
 }
-
-static int json_get_int(const char *body, const char *key, int *value_out) {
-    char pattern[128];
-    snprintf(pattern, sizeof(pattern), "\"%s\"", key);
-
-    const char *p = strstr(body, pattern);
-    if (!p) return 0;
-
-    p += strlen(pattern);
-
-    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
-    if (*p != ':') return 0;
-    p++;
-
-    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
-
-    *value_out = atoi(p);
-    return 1;
-}
-
-
-
 
 int http_run(int port) {
 #ifdef _WIN32
@@ -211,17 +218,46 @@ int http_run(int port) {
         if (client_fd == INVALID_SOCKET) continue;
 
         char buffer[REQ_BUF + 1];
-        int n = recv(client_fd, buffer, REQ_BUF, 0);
+        int total = 0;
+        int n = 0;
+        int content_length = 0;
+        int headers_done = 0;
 
-        if (n > 0) {
-            buffer[n] = '\0';
+        memset(buffer, 0, sizeof(buffer));
 
-            // GET /api/health
+        while ((n = recv(client_fd, buffer + total, REQ_BUF - total, 0)) > 0) {
+            total += n;
+            if (total >= REQ_BUF) break;
+
+            buffer[total] = '\0';
+
+            if (!headers_done) {
+                const char *body = find_body(buffer);
+                if (body) {
+                    headers_done = 1;
+                    content_length = get_content_length(buffer);
+
+                    int body_bytes = total - (int)(body - buffer);
+                    if (body_bytes >= content_length) {
+                        break;
+                    }
+                }
+            } else {
+                const char *body = find_body(buffer);
+                int body_bytes = total - (int)(body - buffer);
+                if (body_bytes >= content_length) {
+                    break;
+                }
+            }
+        }
+
+        buffer[total] = '\0';
+
+        if (total > 0) {
             if (strstr(buffer, "GET /api/health") != NULL) {
                 respond_json(client_fd, "{\"status\":\"OK\"}");
             }
 
-            // GET /api/trips?from=...&to=...
             else if (strstr(buffer, "GET /api/trips") != NULL) {
                 sqlite3 *db;
 
@@ -254,7 +290,6 @@ int http_run(int port) {
                 db_close(db);
             }
 
-            // POST /api/register
             else if (strstr(buffer, "POST /api/register") != NULL) {
                 sqlite3 *db;
 
@@ -294,7 +329,6 @@ int http_run(int port) {
                 db_close(db);
             }
 
-            // POST /api/login
             else if (strstr(buffer, "POST /api/login") != NULL) {
                 sqlite3 *db;
 
@@ -314,7 +348,7 @@ int http_run(int port) {
 
                 char email[256];
                 char password[256];
-                char token[64];
+                char token[128];
 
                 if (!json_get_string(body, "email", email, sizeof(email)) ||
                     !json_get_string(body, "password", password, sizeof(password))) {
@@ -337,82 +371,79 @@ int http_run(int port) {
                 db_close(db);
             }
 
-// POST /api/book
-else if (strstr(buffer, "POST /api/book") != NULL) {
-    sqlite3 *db;
+            else if (strstr(buffer, "POST /api/book") != NULL) {
+                sqlite3 *db;
 
-    if (!db_init(&db)) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"db failed\"}");
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                if (!db_init(&db)) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"db failed\"}");
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    char auth[512];
-    if (!get_header_value(buffer, "Authorization", auth, sizeof(auth))) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"missing Authorization header\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                char auth[512];
+                if (!get_header_value(buffer, "Authorization", auth, sizeof(auth))) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"missing Authorization header\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    const char *prefix = "Bearer ";
-    if (strncmp(auth, prefix, strlen(prefix)) != 0) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"invalid Authorization format\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                const char *prefix = "Bearer ";
+                if (strncmp(auth, prefix, strlen(prefix)) != 0) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"invalid Authorization format\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    const char *token = auth + strlen(prefix);
+                const char *token = auth + strlen(prefix);
 
-    const char *body = find_body(buffer);
-    if (!body) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"missing body\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                const char *body = find_body(buffer);
+                if (!body) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"missing body\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    int trip_id = 0;
-    int seat_no = 0;
+                int trip_id = 0;
+                int seat_no = 0;
 
-    if (!json_get_int(body, "trip_id", &trip_id) ||
-        !json_get_int(body, "seat_no", &seat_no)) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"trip_id/seat_no required\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                if (!json_get_int(body, "trip_id", &trip_id) ||
+                    !json_get_int(body, "seat_no", &seat_no)) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"trip_id/seat_no required\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    char res_id[128];
-    if (!db_book(db, token, trip_id, seat_no, res_id, sizeof(res_id))) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"booking failed\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                char res_id[128];
+                if (!db_book(db, token, trip_id, seat_no, res_id, sizeof(res_id))) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"booking failed\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    char email[256];
-    if (!db_get_email_from_token(db, token, email, sizeof(email))) {
-        respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"email lookup failed\"}");
-        db_close(db);
-        CLOSESOCK(client_fd);
-        continue;
-    }
+                char email[256];
+                if (!db_get_email_from_token(db, token, email, sizeof(email))) {
+                    respond_json(client_fd, "{\"status\":\"ERROR\",\"msg\":\"email lookup failed\"}");
+                    db_close(db);
+                    CLOSESOCK(client_fd);
+                    continue;
+                }
 
-    send_confirmation_email(email, res_id, trip_id, seat_no);
+                send_confirmation_email(email, res_id, trip_id, seat_no);
 
-    char out[256];
-    snprintf(out, sizeof(out),
-        "{\"status\":\"OK\",\"reservation_id\":\"%s\",\"email_sent\":true}",
-        res_id);
+                char out[256];
+                snprintf(out, sizeof(out),
+                    "{\"status\":\"OK\",\"reservation_id\":\"%s\",\"email_sent\":true}",
+                    res_id);
 
-    respond_json(client_fd, out);
-    db_close(db);
-}
+                respond_json(client_fd, out);
+                db_close(db);
+            }
 
-
-            // default
             else {
                 respond_json(client_fd, "{\"status\":\"RUNNING\"}");
             }
