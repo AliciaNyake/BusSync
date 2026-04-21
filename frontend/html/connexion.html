@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusSync — Connexion</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/connexion.css" />
+
+</head>
+<body>
+
+  <nav class="dark">
+    <a class="logo" href="../index.html">BusSync</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="inscription.html" class="btn-nav">Inscription</a></li>
+    </ul>
+  </nav>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-header">
+        <h1>Connexion</h1>
+        <p>Accédez à votre compte BusSync</p>
+      </div>
+
+      <div class="booking-notice" id="login-notice" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F8C6A" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <p id="login-notice-text"></p>
+      </div>
+
+      <div class="login-input-group">
+        <label>Adresse e-mail</label>
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
+        <input type="email" id="login-email" placeholder="votre@email.com" />
+      </div>
+
+      <div class="login-input-group" style="position:relative;">
+        <label>Mot de passe</label>
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <input type="password" id="login-password" placeholder="Votre mot de passe" />
+        <button class="password-toggle" onclick="togglePwd()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+
+      <span class="forgot-link">Mot de passe oublié ?</span>
+
+      <p id="login-error" style="color:var(--red);font-size:0.8rem;text-align:center;margin-bottom:0.75rem;display:none;padding:0.5rem;background:#FFF5F5;border-radius:8px;border:1px solid rgba(192,57,43,0.2);"></p>
+
+      <button class="btn-primary full" onclick="handleLogin()">Valider</button>
+
+      <div class="divider"><span>ou</span></div>
+
+      <p class="signup-prompt">Pas de compte ? <a href="index.html">Retour à l'accueil</a></p>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script>
+    // Afficher notice si réservation en cours
+    var booking = JSON.parse(sessionStorage.getItem('booking') || 'null');
+    if (booking) {
+      document.getElementById('login-notice').style.display = 'flex';
+      document.getElementById('login-notice-text').textContent =
+        'Connectez-vous pour réserver : ' + booking.depart + ' → ' + booking.arrivee;
+    }
+
+    document.getElementById('login-password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    function togglePwd() {
+      var input = document.getElementById('login-password');
+      var icon  = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        input.type = 'password';
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    }
+
+    async function handleLogin() {
+      var email = document.getElementById('login-email').value.trim();
+      var pass  = document.getElementById('login-password').value;
+      var errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+
+      if (!email || !pass) {
+        errEl.textContent = 'Veuillez remplir tous les champs.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      var btn = document.querySelector('.btn-primary');
+      btn.textContent = 'Connexion...';
+      btn.disabled = true;
+
+      try {
+        var data = await apiPost('/api/login', { email: email, password: pass });
+        if (data.status === 'OK' && data.token) {
+          var name = email.split('@')[0];
+          sessionStorage.setItem('session', JSON.stringify({
+            email: email, name: name,
+            initials: name.substring(0,2).toUpperCase(),
+            token: data.token
+          }));
+          window.location.href = 'passagers.html';
+        } else {
+          errEl.textContent = data.msg || 'Email ou mot de passe incorrect.';
+          errEl.style.display = 'block';
+        }
+      } catch(e) {
+        errEl.textContent = 'Serveur inaccessible — mode démo activé.';
+        errEl.style.display = 'block';
+        setTimeout(function() {
+          var name = email.split('@')[0];
+          sessionStorage.setItem('session', JSON.stringify({
+            email: email, name: name,
+            initials: name.substring(0,2).toUpperCase(),
+            token: 'demo'
+          }));
+          window.location.href = 'passagers.html';
+        }, 1200);
+      }
+      btn.textContent = 'Valider';
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>

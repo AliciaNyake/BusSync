@@ -1,0 +1,71 @@
+.main {
+  max-width: 580px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 4rem;
+  width: 100%;
+}
+
+.section-head { margin-bottom: 1.75rem; }
+
+.section-head h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem; font-weight: 800;
+  letter-spacing: -0.5px; margin-bottom: 0.25rem;
+}
+
+.section-head p { font-size: 0.875rem; color: var(--muted); font-weight: 300; }
+
+.card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.25rem 1.5rem;
+  margin-bottom: 0.85rem;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover { border-color: rgba(15,140,106,0.3); box-shadow: 0 2px 12px rgba(15,140,106,0.07); }
+
+.pax-type { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+.pax-desc { font-size: 0.78rem; color: var(--muted); font-weight: 300; margin-top: 0.15rem; }
+
+.counter { display: flex; align-items: center; gap: 1rem; }
+
+.cnt-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 2px solid var(--teal); background: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 1.4rem; font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  transition: background 0.15s, transform 0.1s;
+  user-select: none;
+}
+
+.cnt-btn:hover { background: var(--teal); color: white; }
+.cnt-btn:active { transform: scale(0.9); }
+.cnt-btn:disabled { border-color: #D0CFC8; color: #D0CFC8; cursor: not-allowed; background: white; }
+.cnt-btn:disabled:hover { background: white; color: #D0CFC8; }
+
+.cnt-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem; font-weight: 800;
+  min-width: 30px; text-align: center;
+}
+
+.notice {
+  display: flex; gap: 0.6rem;
+  margin-top: 0.25rem; padding: 0.85rem 1rem;
+  background: var(--teal-light); border-radius: 10px;
+  border-left: 3px solid var(--teal);
+}
+
+.notice p { font-size: 0.8rem; color: var(--teal-dark); line-height: 1.6; }
+
+.summary {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.2rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.summary-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.15rem; }
+.summary-count { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
