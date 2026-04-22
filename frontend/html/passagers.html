@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BusSync — Passagers</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/passagers.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="logo" href="index.html">BusSync</a>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
+
+  <div class="stepper" id="stepper"></div>
+
+  <div class="main">
+    <div class="section-head">
+      <h1>Qui voyage ?</h1>
+      <p id="passagers-subtitle">Indiquez le nombre de passagers pour ce trajet</p>
+    </div>
+
+    <div class="card">
+      <div>
+        <p class="pax-type">Adultes</p>
+        <p class="pax-desc">12 ans et plus</p>
+      </div>
+      <div class="counter">
+        <button class="cnt-btn" id="adult-minus" onclick='change("adult",-1)' disabled>−</button>
+        <span class="cnt-val" id="adult-val">1</span>
+        <button class="cnt-btn" onclick='change("adult",1)'>+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <p class="pax-type">Enfants</p>
+        <p class="pax-desc">4 à 11 ans — tarif réduit</p>
+      </div>
+      <div class="counter">
+        <button class="cnt-btn" id="child-minus" onclick='change("child",-1)' disabled>−</button>
+        <span class="cnt-val" id="child-val">0</span>
+        <button class="cnt-btn" onclick='change("child",1)'>+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <p class="pax-type">Bébés</p>
+        <p class="pax-desc">Moins de 4 ans — gratuit</p>
+      </div>
+      <div class="counter">
+        <button class="cnt-btn" id="baby-minus" onclick='change("baby",-1)' disabled>−</button>
+        <span class="cnt-val" id="baby-val">0</span>
+        <button class="cnt-btn" onclick='change("baby",1)'>+</button>
+      </div>
+    </div>
+
+    <div class="notice">
+      <p>Les bébés voyagent gratuitement sur les genoux d'un adulte. Un siège supplémentaire peut être réservé au tarif enfant.</p>
+    </div>
+
+    <div class="summary">
+      <div>
+        <p class="summary-label">Total passagers</p>
+        <p class="summary-count" id="total-label">1 passager</p>
+      </div>
+      <button class="btn-continue" onclick="handleContinuePax()">Continuer →</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script>
+    window.addEventListener('error', function (e) {
+      console.error('Erreur JS passagers:', e.message);
+    });
+
+    var session = JSON.parse(sessionStorage.getItem('session') || 'null');
+    var booking = JSON.parse(sessionStorage.getItem('booking') || 'null');
+
+    if (!session) {
+      window.location.href = 'connexion.html';
+    }
+
+    if (!booking) {
+      window.location.href = 'index.html';
+    }
+
+    var navEl = document.getElementById('nav-links');
+    if (navEl && session) {
+      navEl.innerHTML =
+        '<li><a href="index.html">Accueil</a></li>' +
+        '<li><div class="user-badge"><div class="user-avatar">' + (session.initials || 'U') + '</div>' +
+        '<span class="user-name">' + (session.name || 'Utilisateur') + '</span></div></li>' +
+        '<li><button class="btn-logout" onclick="logout()">Déconnexion</button></li>';
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    if (typeof buildStepper === 'function' && booking) {
+      buildStepper('stepper', booking, 2);
+    }
+
+    var subtitle = document.getElementById('passagers-subtitle');
+    if (subtitle && booking) {
+      subtitle.textContent =
+        'Indiquez le nombre de passagers pour ' +
+        (booking.depart || 'Départ') + ' → ' + (booking.arrivee || 'Arrivée');
+    }
+
+    var paxState = {
+      adult: 1,
+      child: 0,
+      baby: 0
+    };
+
+    if (booking && booking.passagers) {
+      paxState.adult = booking.passagers.adult || 1;
+      paxState.child = booking.passagers.child || 0;
+      paxState.baby = booking.passagers.baby || 0;
+    }
+
+    function change(type, delta) {
+      var next = paxState[type] + delta;
+      if (next < 0) return;
+      if (type === 'adult' && next < 1) return;
+      paxState[type] = next;
+      updatePax();
+    }
+
+    function updatePax() {
+      document.getElementById('adult-val').textContent = paxState.adult;
+      document.getElementById('child-val').textContent = paxState.child;
+      document.getElementById('baby-val').textContent = paxState.baby;
+
+      document.getElementById('adult-minus').disabled = paxState.adult <= 1;
+      document.getElementById('child-minus').disabled = paxState.child <= 0;
+      document.getElementById('baby-minus').disabled = paxState.baby <= 0;
+
+      var total = paxState.adult + paxState.child + paxState.baby;
+      document.getElementById('total-label').textContent =
+        total + (total > 1 ? ' passagers' : ' passager');
+    }
+
+    function handleContinuePax() {
+      booking.passagers = {
+        adult: paxState.adult,
+        child: paxState.child,
+        baby: paxState.baby
+      };
+
+      sessionStorage.setItem('booking', JSON.stringify(booking));
+      window.location.href = 'sieges.html';
+    }
+
+    updatePax();
+  </script>
+</body>
+</html>

@@ -1,41 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link rel="stylesheet" href="../frontend/css/confirmation.css">
-     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
-rel="stylesheet" />
-    <title>confirmation</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/confirmation.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <title>Confirmation</title>
 </head>
 <body>
-   <header>
-     <h1>BusSync </h1>
-     <nav>
-            <div id="liens">
-                <div>
-                    <button style="color:#FFFF; font-family:'Syne',sans-serif; font-weight:200; border:1px solid #085041; padding:10px 28px; background-color:#085041; border-radius:8px; cursor:pointer;" onclick="window.location.href=''">
-  Accueil
-</button>
-                </div>
-               
-                </style>
-     
-    </header>
-      <main>
-        <strong><h2>Votre réservation a bien été confirmée</h2></strong>
-      <h3>Numéro de réservation: F5R6G8U4F8F</h3>
-      <h3>Identifiant du bus: A875</h3>
-      <H3>places : A1,A2,A3</H3>
+  <header>
+    <h1>BusSync</h1>
 
-      <img
-      src="https://upload.wikimedia.org/wikipedia/commons/6/6a/QRcode_Wikipedia_FRA.png" 
-      width="300" alt="QR code de la réservation"
-      />
- <div>
-        <p><span>La compagnie BusSync vous souhaite un agréable voyage et espère vous revoir très bientôt !</span></p>
+    <nav>
+      <div id="liens">
+        <div>
+          <button
+            style="color:#FFFF; font-family:'Syne',sans-serif; font-weight:200; border:1px solid #085041; padding:10px 28px; background-color:#085041; border-radius:8px; cursor:pointer;"
+            onclick="goHome()">
+            Accueil
+          </button>
+        </div>
       </div>
-      </main>
-      
+    </nav>
+  </header>
+
+  <main>
+    <strong><h2>Votre réservation a bien été confirmée</h2></strong>
+
+    <h3 id="reservation-id">Numéro de réservation : ...</h3>
+    <h3 id="trip-id">Identifiant du trajet : ...</h3>
+    <h3 id="seat-info">Place : ...</h3>
+    <h3 id="route-info">Trajet : ...</h3>
+    <h3 id="price-info">Prix : ...</h3>
+
+    <div>
+      <p>
+        <span>
+          La compagnie BusSync vous souhaite un agréable voyage et espère vous revoir très bientôt !
+        </span>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    var booking = JSON.parse(sessionStorage.getItem('booking') || 'null');
+
+    if (!booking) {
+      document.getElementById('reservation-id').textContent = 'Aucune réservation trouvée.';
+      document.getElementById('trip-id').textContent = '';
+      document.getElementById('seat-info').textContent = '';
+      document.getElementById('route-info').textContent = '';
+      document.getElementById('price-info').textContent = '';
+    } else {
+      document.getElementById('reservation-id').textContent =
+        'Numéro de réservation : ' + (booking.reservation_id || 'Non disponible');
+
+      document.getElementById('trip-id').textContent =
+        'Identifiant du trajet : ' + (booking.trip_id || 'Non disponible');
+
+      document.getElementById('seat-info').textContent =
+        'Place : ' + (booking.seats && booking.seats.length ? booking.seats.join(', ') : (booking.seat_no || 'Non disponible'));
+
+      document.getElementById('route-info').textContent =
+        'Trajet : ' + (booking.depart || 'Départ') + ' → ' + (booking.arrivee || 'Arrivée');
+
+      document.getElementById('price-info').textContent =
+        'Prix : ' + (booking.trip_price ? booking.trip_price + ' €' : 'Non disponible');
+    }
+
+    function goHome() {
+      sessionStorage.removeItem('booking');
+      window.location.href = '../index.html';
+    }
+  </script>
 </body>
 </html>

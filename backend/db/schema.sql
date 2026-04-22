@@ -1,0 +1,42 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS trips (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_city TEXT NOT NULL,
+  to_city TEXT NOT NULL,
+  date TEXT NOT NULL,
+  price REAL NOT NULL,
+  seat_count INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS seats (
+  trip_id INTEGER NOT NULL,
+  seat_no INTEGER NOT NULL,
+  is_booked INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(trip_id, seat_no),
+  FOREIGN KEY(trip_id) REFERENCES trips(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  trip_id INTEGER NOT NULL,
+  seat_no INTEGER NOT NULL,
+  res_id TEXT UNIQUE NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(trip_id) REFERENCES trips(id) ON DELETE CASCADE
+);

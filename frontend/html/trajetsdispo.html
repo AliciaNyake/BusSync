@@ -1,83 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trajets disponibles</title>
-    <link rel="stylesheet" href="../frontend/css/trajetsdispo.css">
-     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
-rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajets disponibles</title>
+  <link rel="stylesheet" href="../css/trajetsdispo.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-   <header id="entete">
-     <h1>BusSync</h1>
-     
-    
+  <header id="entete">
+    <h1>BusSync</h1>
 
- 
-   <nav>
-            <div id="liens">
-                <div>
-                    <a href="accueil.html">Accueil</a>
-                </div>
-                <div><a href="passagers.html">passagers</a></div>
-                <div><a href="connexion.html">Connexion</a></div>
-                <div><a href="inscription.html">Inscription</a></div>
-               
-                </style>
-                
-                </div>
-        </nav>
-        <style>
-            #liens {
-                margin-left: 600px;
-            }
-        </style>
-    </header>
- 
-    <br>
-    <br>
-    <br>
-   <main>
-     <h2><strong>Trajets disponibles</strong></h2>
-   <li>
-     <a href="reservation.html">
-            <div id="prop1">
-                <style>
-                    #prop1{
-                         border: 5px solid rgba(0,0,0,0.10);
-                        border-radius: 14px;
-                        background-color: #FFFFFF;
-                     
-                     
-                 }
-                </style>
-                <h4>Heure de départ, Lieux de départ</h4>
-                <h4>Heure d'arrivée, lieux d'arrivée</h4>
-                <h5><strong>prix</strong></h5>
-                <h5><strong>nombre de places disponibles</strong></h5>
-            </div>
-        </a>
-    <br>
+    <nav>
+      <div id="liens">
+        <div><a href="../index.html">Accueil</a></div>
+        <div><a href="passagers.html">Passagers</a></div>
+        <div><a href="connexion.html">Connexion</a></div>
+        <div><a href="inscription.html">Inscription</a></div>
+      </div>
+    </nav>
 
-        <a href="reservation.html">
-            <div id="prop2">
-                <style>
-                    #prop2{
-                        background-color: #FFFFFF;
-                         border: 5px solid rgba(0,0,0,0.10);
-                        border-radius: 14px;
-                     
-                     
-                 }
-                </style>
-                <h4>Heure de départ, Lieux de départ</h4>
-                <h4>Heure d'arrivée, lieux d'arrivée</h4>
-                <h5><strong>prix</strong></h5>
-                <h5><strong>nombre de places disponibles</strong></h5>
-            </div>
-        </a>
-   </li> 
-   </main>
+    <style>
+      #liens {
+        margin-left: 600px;
+      }
+    </style>
+  </header>
+
+  <br><br><br>
+
+  <main>
+    <h2><strong>Trajets disponibles</strong></h2>
+
+    <p id="trajets-message" style="font-weight:bold; color:#a93226;"></p>
+
+    <div id="trajets-list"></div>
+  </main>
+
+  <script src="../js/app.js"></script>
+  <script>
+    async function loadTrips() {
+      const messageEl = document.getElementById("trajets-message");
+      const listEl = document.getElementById("trajets-list");
+
+      // Récupérer les infos de réservation temporaire
+      const booking = JSON.parse(sessionStorage.getItem("booking") || "null");
+
+      if (!booking || !booking.depart || !booking.arrivee) {
+        messageEl.textContent = "Aucune recherche trouvée. Retournez à l'accueil.";
+        return;
+      }
+
+      messageEl.textContent = "Chargement des trajets...";
+
+      try {
+        const data = await apiGet(
+          "/trips?from=" + encodeURIComponent(booking.depart) +
+          "&to=" + encodeURIComponent(booking.arrivee)
+        );
+
+        if (!data || data.status !== "OK" || !data.trips || data.trips.length === 0) {
+          messageEl.textContent = "Aucun trajet trouvé pour cette recherche.";
+          listEl.innerHTML = "";
+          return;
+        }
+
+        messageEl.textContent = "";
+        listEl.innerHTML = "";
+
+        data.trips.forEach(function(trip) {
+          const card = document.createElement("div");
+          card.className = "trip-card";
+          card.style.backgroundColor = "#FFFFFF";
+          card.style.border = "5px solid rgba(0,0,0,0.10)";
+          card.style.borderRadius = "14px";
+          card.style.padding = "20px";
+          card.style.marginBottom = "20px";
+          card.style.cursor = "pointer";
+
+          card.innerHTML = `
+            <h4>Départ : ${trip.from}</h4>
+            <h4>Arrivée : ${trip.to}</h4>
+            <h5><strong>Date :</strong> ${trip.date || "Non précisée"}</h5>
+            <h5><strong>Prix :</strong> ${trip.price} €</h5>
+            <h5><strong>Places :</strong> ${trip.seat_count || "N/A"}</h5>
+          `;
+
+          card.addEventListener("click", function() {
+            // On garde le trajet choisi en session
+            booking.trip_id = trip.id;
+            booking.trip_price = trip.price;
+            booking.trip_date = trip.date;
+            booking.trip_seat_count = trip.seat_count;
+
+            sessionStorage.setItem("booking", JSON.stringify(booking));
+
+            // Aller à l'étape suivante
+            window.location.href = "resume.html";
+          });
+
+          listEl.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent = "Impossible de contacter le serveur.";
+      }
+    }
+
+    loadTrips();
+  </script>
 </body>
 </html>
